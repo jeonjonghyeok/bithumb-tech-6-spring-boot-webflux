@@ -4,23 +4,34 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+
+import jjh.api.quiz.config.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
-import java.time.Duration;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class FluxAndMonoTest {
+    @Mock
+    CustomException customExceptionMono;
+
+    @Mock
+    CustomException customExceptionFlux;
+
+    @BeforeEach
+    void setUp() {
+        customExceptionMono = new CustomException("Mono");
+        customExceptionFlux = new CustomException("Flux");
+    }
+
     @DisplayName("Flux just() Sample")
     @Test
     void main() {
@@ -142,7 +153,7 @@ public class FluxAndMonoTest {
     @Test
     void monoEmptyTest() {
         Mono<String> result = Mono.empty();
-        assertThat(result, is(""));
+        assertThat(result.block(), is(nullValue()));
     }
     @DisplayName("Mono just() Sample")
     @Test
@@ -160,7 +171,15 @@ public class FluxAndMonoTest {
                 .map(item -> item.toUpperCase())
                 .subscribe(System.out::print);
 
-
-
+    }
+    @DisplayName("Mono Flux error() Sample")
+    @Test
+    void errorTest() {
+        Mono.error(customExceptionMono)
+                .doOnError(m -> System.out.println("Mono inside doOnError"))
+                .subscribe(System.out::println);
+        Flux.error(customExceptionFlux)
+                .doOnError(m -> System.out.println("Flux inside doOnError"))
+                .subscribe(System.out::println);
     }
 }
